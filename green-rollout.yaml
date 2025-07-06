@@ -1,0 +1,25 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  name: green-rollout
+  namespace: skills
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: green
+  template:
+    metadata:
+      labels:
+        app: green
+    spec:
+      containers:
+        - name: green-app
+          image: 950274644703.dkr.ecr.ap-northeast-2.amazonaws.com/green:v1.0.0
+          ports:
+            - containerPort: 8080
+  strategy:
+    blueGreen:
+      activeService: green-service-active
+      previewService: green-service-preview
+      autoPromotionEnabled: true
