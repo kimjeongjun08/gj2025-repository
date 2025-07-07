@@ -1,0 +1,38 @@
+version: 0.2
+
+env:
+  variables:
+    TZ: "Asia/Seoul"
+    AWS_DEFAULT_REGION: "ap-northeast-2"
+    AWS_ACCOUNT_ID: "950274644703"
+    ECR_REPO_NAME: "green"
+    GITHUB_REPO_URL: "https://github.com/dml113/gj2025-repository.git"
+
+phases:
+  pre_build:
+    commands:
+      - echo Setting timezone and environment...
+      - echo Logging in to Amazon ECR...
+      - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com
+      - echo Cloning GitHub repository...
+      - git config --global user.name "CodeBuild Bot"
+      - git config --global user.email "codebuild@bot.com"
+      - git clone -b gitops-green https://oauth2:$GITHUB_TOKEN@github.com/dml113/gj2025-repository.git
+
+  build:
+    commands:
+      - echo Building the Docker image...
+      - IMAGE_TAG=$(TZ=$TZ date +"%Y-%m-%d.%H.%M.%S")
+      - docker build -t $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$ECR_REPO_NAME:$IMAGE_TAG .
+
+  post_build:
+    commands:
+      - echo Pushing Docker image to Amazon ECR...
+      - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$ECR_REPO_NAME:$IMAGE_TAG
+      - echo Replacing image tag in green-rollout.yaml...
+      - cd gj2025-repository
+      - sed -i "s|image: ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com/green:.*|image: ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com/green:${IMAGE_TAG}|" green-rollout.yaml
+      - echo Committing and pushing updated green-rollout.yaml...
+      - git add green-rollout.yaml
+      - git commit -m "Update green rollout image tag to ${IMAGE_TAG}"
+      - git push https://oauth2:$GITHUB_TOKEN@github.com/dml113/gj2025-repository.git HEAD:gitops-green
