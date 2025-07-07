@@ -11,6 +11,9 @@ env:
 phases:
   pre_build:
     commands:
+      - curl -sSL -o argocd-linux-amd64 https://github.com/argoproj/argo-cd/releases/latest/download/argocd-linux-amd64
+      - sudo install -m 555 argocd-linux-amd64 /usr/local/bin/argocd
+      - rm argocd-linux-amd64
       - echo Setting timezone and environment...
       - echo Logging in to Amazon ECR...
       - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com
@@ -31,8 +34,10 @@ phases:
       - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$ECR_REPO_NAME:$IMAGE_TAG
       - echo Replacing image tag in red-rollout.yaml...
       - cd gj2025-repository
-      - sed -i "s|image: ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com/red:.*|image: ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com/red:${IMAGE_TAG}|" red-rollout.yaml
+      - 'sed -i "s|image: ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com/red:.*|image: ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com/red:${IMAGE_TAG}|" red-rollout.yaml'
       - echo Committing and pushing updated red-rollout.yaml...
       - git add red-rollout.yaml
       - git commit -m "Update red rollout image tag to ${IMAGE_TAG}"
       - git push https://oauth2:$GITHUB_TOKEN@github.com/dml113/gj2025-repository.git HEAD:gitops-red
+      - echo y | argocd login gj2025-argo-external-nlb-f43b3685a6edfdcc.elb.ap-northeast-2.amazonaws.com:80 --username admin --password Skill53## 
+      - argocd app sync red-app
