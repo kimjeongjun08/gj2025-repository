@@ -5,7 +5,7 @@ env:
     TZ: "Asia/Seoul"
     AWS_DEFAULT_REGION: "ap-northeast-2"
     AWS_ACCOUNT_ID: "950274644703"
-    ECR_REPO_NAME: "green"
+    ECR_REPO_NAME: "red"
     GITHUB_REPO_URL: "https://github.com/dml113/gj2025-repository.git"
 
 phases:
@@ -17,7 +17,7 @@ phases:
       - echo Cloning GitHub repository...
       - git config --global user.name "CodeBuild Bot"
       - git config --global user.email "codebuild@bot.com"
-      - git clone -b gitops-green https://oauth2:$GITHUB_TOKEN@github.com/dml113/gj2025-repository.git
+      - git clone -b gitops-red https://oauth2:$GITHUB_TOKEN@github.com/dml113/gj2025-repository.git
 
   build:
     commands:
@@ -29,10 +29,10 @@ phases:
     commands:
       - echo Pushing Docker image to Amazon ECR...
       - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$ECR_REPO_NAME:$IMAGE_TAG
-      - echo Replacing image tag in green-rollout.yaml...
+      - echo Replacing image tag in red-rollout.yaml...
       - cd gj2025-repository
-      - sed -i "s|image: ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com/green:.*|image: ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com/green:${IMAGE_TAG}|" green-rollout.yaml
-      - echo Committing and pushing updated green-rollout.yaml...
-      - git add green-rollout.yaml
-      - git commit -m "Update green rollout image tag to ${IMAGE_TAG}"
-      - git push https://oauth2:$GITHUB_TOKEN@github.com/dml113/gj2025-repository.git HEAD:gitops-green
+      - sed -i "s|image: ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com/red:.*|image: ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com/red:${IMAGE_TAG}|" red-rollout.yaml
+      - echo Committing and pushing updated red-rollout.yaml...
+      - git add red-rollout.yaml
+      - git commit -m "Update red rollout image tag to ${IMAGE_TAG}"
+      - git push https://oauth2:$GITHUB_TOKEN@github.com/dml113/gj2025-repository.git HEAD:gitops-red
