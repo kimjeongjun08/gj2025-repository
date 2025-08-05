@@ -4,9 +4,10 @@ env:
   variables:
     TZ: "Asia/Seoul"
     AWS_DEFAULT_REGION: "ap-northeast-2"
-    AWS_ACCOUNT_ID: "950274644703"
+    AWS_ACCOUNT_ID: "003150130236"
     ECR_REPO_NAME: "red"
-    GITHUB_REPO_URL: "https://github.com/dml113/gj2025-repository.git"
+    GITHUB_REPO_URL: "https://github.com/kimjeongjun08/gj2025-repository.git"
+    GITHUB_TOKEN : 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
 
 phases:
   pre_build:
@@ -20,7 +21,7 @@ phases:
       - echo Cloning GitHub repository...
       - git config --global user.name "CodeBuild Bot"
       - git config --global user.email "codebuild@bot.com"
-      - git clone -b gitops-red https://oauth2:$GITHUB_TOKEN@github.com/dml113/gj2025-repository.git
+      - git clone -b gitops-red https://oauth2:$GITHUB_TOKEN@github.com/kimjeongjun08/gj2025-repository.git
 
   build:
     commands:
@@ -38,6 +39,6 @@ phases:
       - echo Committing and pushing updated red-rollout.yaml...
       - git add red-rollout.yaml
       - git commit -m "Update red rollout image tag to ${IMAGE_TAG}"
-      - git push https://oauth2:$GITHUB_TOKEN@github.com/dml113/gj2025-repository.git HEAD:gitops-red
+      - git push https://oauth2:$GITHUB_TOKEN@github.com/kimjeongjun08/gj2025-repository.git HEAD:gitops-red
       - echo y | argocd login gj2025-argo-external-nlb-f43b3685a6edfdcc.elb.ap-northeast-2.amazonaws.com:80 --username admin --password Skill53## 
       - argocd app sync red-app
